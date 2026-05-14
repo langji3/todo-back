@@ -22,3 +22,4 @@ Thumbs.db
 *.env
 application-local.yml
 application-local.properties
+/src/main/resources/application-dev.yml
