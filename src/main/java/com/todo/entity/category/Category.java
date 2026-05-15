@@ -1,4 +1,4 @@
-package com.todo.entity.user;
+package com.todo.entity.category;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
@@ -6,25 +6,17 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("t_user")
-public class User {
+@TableName("t_category")
+public class Category {
 
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    private String username;
+    private String name;
 
-    private String password;
+    private String color;
 
-    private String nickname;
-
-    private String email;
-
-    private String avatar;
-
-    private String phone;
-
-    private Integer role;
+    private Long userId;
 
     @TableLogic
     private Integer deleteFlag;

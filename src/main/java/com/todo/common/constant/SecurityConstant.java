@@ -6,8 +6,8 @@ public class SecurityConstant {
     public static final String BEARER_PREFIX = "Bearer ";
 
     public static final String[] PERMIT_ALL_PATHS = {
-            "/api/users/register",
-            "/api/users/login",
+            "/api/auth/login",
+            "/api/auth/register",
             "/swagger-docs/**",
             "/swagger-ui.html",
             "/swagger-ui/**",

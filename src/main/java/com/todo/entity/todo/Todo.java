@@ -1,30 +1,29 @@
-package com.todo.entity.user;
+package com.todo.entity.todo;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("t_user")
-public class User {
+@TableName("t_todo")
+public class Todo {
 
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    private String username;
+    private String title;
 
-    private String password;
+    private String description;
 
-    private String nickname;
+    private LocalDate date;
 
-    private String email;
+    private Long categoryId;
 
-    private String avatar;
+    private Integer status;
 
-    private String phone;
-
-    private Integer role;
+    private Long userId;
 
     @TableLogic
     private Integer deleteFlag;

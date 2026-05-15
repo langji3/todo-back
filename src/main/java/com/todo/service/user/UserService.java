@@ -1,24 +1,24 @@
 package com.todo.service.user;
 
-import com.github.pagehelper.PageInfo;
-import com.todo.dto.user.*;
+import com.todo.dto.user.UserLoginRequest;
+import com.todo.dto.user.UserRegisterRequest;
+import com.todo.dto.user.UserUpdateRequest;
+import com.todo.vo.auth.AuthVO;
 import com.todo.vo.user.UserVO;
 
 public interface UserService {
 
-    UserVO register(UserRegisterRequest request);
+    AuthVO register(UserRegisterRequest request);
 
-    String login(UserLoginRequest request);
+    AuthVO login(UserLoginRequest request);
 
-    void logout(String username);
+    void logout(String email);
+
+    UserVO getCurrentUser(String email);
 
     UserVO getUserById(Long id);
 
-    UserVO getUserByUsername(String username);
+    UserVO updateProfile(String email, UserUpdateRequest request);
 
-    PageInfo<UserVO> listUsers(int pageNum, int pageSize);
-
-    UserVO updateUser(Long id, UserUpdateRequest request);
-
-    void deleteUser(Long id);
+    String uploadAvatar(String email, String avatarUrl);
 }

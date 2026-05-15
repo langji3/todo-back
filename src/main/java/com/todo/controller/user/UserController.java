@@ -1,9 +1,12 @@
 package com.todo.controller.user;
 
-import com.github.pagehelper.PageInfo;
 import com.todo.common.api.BaseResponse;
-import com.todo.dto.user.*;
+import com.todo.common.util.OssUtil;
+import com.todo.dto.user.SettingsRequest;
+import com.todo.dto.user.UserUpdateRequest;
+import com.todo.service.settings.UserSettingsService;
 import com.todo.service.user.UserService;
+import com.todo.vo.user.SettingsVO;
 import com.todo.vo.user.UserVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -12,6 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
@@ -23,59 +27,39 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
+    private final UserSettingsService userSettingsService;
+    private final OssUtil ossUtil;
 
-    @Operation(summary = "用户注册")
-    @PostMapping("/register")
-    public BaseResponse<UserVO> register(@Valid @RequestBody UserRegisterRequest request) {
-        return BaseResponse.success(userService.register(request));
+    @Operation(summary = "更新用户资料")
+    @PutMapping("/profile")
+    public BaseResponse<UserVO> updateProfile(HttpServletRequest request,
+                                               @Valid @RequestBody UserUpdateRequest updateRequest) {
+        String email = request.getUserPrincipal().getName();
+        return BaseResponse.success(userService.updateProfile(email, updateRequest));
     }
 
-    @Operation(summary = "用户登录")
-    @PostMapping("/login")
-    public BaseResponse<String> login(@Valid @RequestBody UserLoginRequest request) {
-        return BaseResponse.success(userService.login(request));
+    @Operation(summary = "上传头像")
+    @PostMapping("/avatar")
+    public BaseResponse<Map<String, String>> uploadAvatar(HttpServletRequest request,
+                                                           @RequestParam("file") MultipartFile file) {
+        String email = request.getUserPrincipal().getName();
+        String avatarUrl = ossUtil.upload(file, email);
+        userService.uploadAvatar(email, avatarUrl);
+        return BaseResponse.success(Map.of("avatar", avatarUrl));
     }
 
-    @Operation(summary = "用户登出")
-    @PostMapping("/logout")
-    public BaseResponse<Void> logout(HttpServletRequest request) {
-        String username = request.getUserPrincipal().getName();
-        userService.logout(username);
-        return BaseResponse.success();
+    @Operation(summary = "获取用户设置")
+    @GetMapping("/settings")
+    public BaseResponse<SettingsVO> getSettings(HttpServletRequest request) {
+        String email = request.getUserPrincipal().getName();
+        return BaseResponse.success(userSettingsService.getSettings(email));
     }
 
-    @Operation(summary = "获取当前用户信息")
-    @GetMapping("/me")
-    public BaseResponse<UserVO> getCurrentUser(HttpServletRequest request) {
-        String username = request.getUserPrincipal().getName();
-        return BaseResponse.success(userService.getUserByUsername(username));
-    }
-
-    @Operation(summary = "根据ID获取用户")
-    @GetMapping("/{id}")
-    public BaseResponse<UserVO> getUserById(@PathVariable Long id) {
-        return BaseResponse.success(userService.getUserById(id));
-    }
-
-    @Operation(summary = "获取用户列表")
-    @GetMapping
-    public BaseResponse<PageInfo<UserVO>> listUsers(
-            @RequestParam(defaultValue = "1") int pageNum,
-            @RequestParam(defaultValue = "10") int pageSize) {
-        return BaseResponse.success(userService.listUsers(pageNum, pageSize));
-    }
-
-    @Operation(summary = "更新用户信息")
-    @PutMapping("/{id}")
-    public BaseResponse<UserVO> updateUser(@PathVariable Long id,
-                                           @Valid @RequestBody UserUpdateRequest request) {
-        return BaseResponse.success(userService.updateUser(id, request));
-    }
-
-    @Operation(summary = "删除用户")
-    @DeleteMapping("/{id}")
-    public BaseResponse<Void> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
-        return BaseResponse.success();
+    @Operation(summary = "更新用户设置")
+    @PatchMapping("/settings")
+    public BaseResponse<SettingsVO> updateSettings(HttpServletRequest request,
+                                                    @RequestBody SettingsRequest settingsRequest) {
+        String email = request.getUserPrincipal().getName();
+        return BaseResponse.success(userSettingsService.updateSettings(email, settingsRequest));
     }
 }

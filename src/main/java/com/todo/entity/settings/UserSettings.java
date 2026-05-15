@@ -1,4 +1,4 @@
-package com.todo.entity.user;
+package com.todo.entity.settings;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
@@ -6,28 +6,17 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-@TableName("t_user")
-public class User {
+@TableName("t_user_settings")
+public class UserSettings {
 
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    private String username;
+    private Long userId;
 
-    private String password;
+    private Boolean darkMode;
 
-    private String nickname;
-
-    private String email;
-
-    private String avatar;
-
-    private String phone;
-
-    private Integer role;
-
-    @TableLogic
-    private Integer deleteFlag;
+    private Boolean notifications;
 
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
