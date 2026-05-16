@@ -24,3 +24,5 @@ application-local.yml
 application-local.properties
 .jvm-args.txt
 /docs/
+/.claude/
+/CLAUDE.md
