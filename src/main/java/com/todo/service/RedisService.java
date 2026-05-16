@@ -32,6 +32,10 @@ public class RedisService {
         return stringRedisTemplate.hasKey(key);
     }
 
+    public Long increment(String key) {
+        return stringRedisTemplate.opsForValue().increment(key);
+    }
+
     public Boolean expire(String key, long timeout, TimeUnit unit) {
         return stringRedisTemplate.expire(key, timeout, unit);
     }

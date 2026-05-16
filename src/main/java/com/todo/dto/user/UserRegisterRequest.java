@@ -19,4 +19,7 @@ public class UserRegisterRequest {
     @NotBlank(message = "密码不能为空")
     @Size(min = 6, max = 128, message = "密码长度为6-128个字符")
     private String password;
+
+    @NotBlank(message = "验证码不能为空")
+    private String code;
 }

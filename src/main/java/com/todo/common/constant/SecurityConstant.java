@@ -8,6 +8,7 @@ public class SecurityConstant {
     public static final String[] PERMIT_ALL_PATHS = {
             "/api/auth/login",
             "/api/auth/register",
+            "/api/auth/send-code",
             "/swagger-docs/**",
             "/swagger-ui.html",
             "/swagger-ui/**",

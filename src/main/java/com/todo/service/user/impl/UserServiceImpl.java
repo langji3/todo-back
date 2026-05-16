@@ -11,6 +11,7 @@ import com.todo.dto.user.UserRegisterRequest;
 import com.todo.dto.user.UserUpdateRequest;
 import com.todo.entity.user.User;
 import com.todo.mapper.user.UserMapper;
+import com.todo.service.auth.VerifyCodeService;
 import com.todo.service.user.UserService;
 import com.todo.vo.auth.AuthVO;
 import com.todo.vo.user.UserVO;
@@ -30,10 +31,13 @@ public class UserServiceImpl implements UserService {
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisTokenService redisTokenService;
     private final ModelMapper modelMapper;
+    private final VerifyCodeService verifyCodeService;
 
     @Override
     @Transactional
     public AuthVO register(UserRegisterRequest request) {
+        verifyCodeService.verifyCode(request.getEmail(), request.getCode());
+
         Long count = userMapper.selectCount(
                 new LambdaQueryWrapper<User>().eq(User::getEmail, request.getEmail()));
         if (count > 0) {

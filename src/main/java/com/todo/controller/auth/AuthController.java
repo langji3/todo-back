@@ -1,8 +1,11 @@
 package com.todo.controller.auth;
 
 import com.todo.common.api.BaseResponse;
+import com.todo.common.util.IpUtil;
+import com.todo.dto.auth.SendCodeRequest;
 import com.todo.dto.user.UserLoginRequest;
 import com.todo.dto.user.UserRegisterRequest;
+import com.todo.service.auth.VerifyCodeService;
 import com.todo.service.user.UserService;
 import com.todo.vo.auth.AuthVO;
 import com.todo.vo.user.UserVO;
@@ -13,8 +16,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 @Tag(name = "认证管理")
 @RestController
 @RequestMapping("/api/auth")
@@ -22,6 +23,16 @@ import java.util.Map;
 public class AuthController {
 
     private final UserService userService;
+    private final VerifyCodeService verifyCodeService;
+
+    @Operation(summary = "发送验证码")
+    @PostMapping("/send-code")
+    public BaseResponse<Void> sendCode(@Valid @RequestBody SendCodeRequest request,
+                                       HttpServletRequest httpRequest) {
+        String ip = IpUtil.getClientIp(httpRequest);
+        verifyCodeService.sendCode(request.getEmail(), ip);
+        return BaseResponse.success();
+    }
 
     @Operation(summary = "用户注册")
     @PostMapping("/register")
