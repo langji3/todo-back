@@ -8,7 +8,6 @@ USE todo;
 -- 1. 创建用户表
 CREATE TABLE IF NOT EXISTS t_user (
     id          BIGINT       AUTO_INCREMENT PRIMARY KEY COMMENT '用户ID',
-    username    VARCHAR(64)  NULL                    COMMENT '用户名',
     password    VARCHAR(255) NOT NULL                COMMENT 'BCrypt加密密码',
     nickname    VARCHAR(64)  NULL                    COMMENT '昵称（前端name字段）',
     email       VARCHAR(128) NOT NULL                COMMENT '邮箱（登录标识）',
