@@ -20,9 +20,10 @@ Thumbs.db
 # Env & secrets
 .env
 *.env
+application-dev.yml
 application-local.yml
 application-local.properties
-.jvm-args.txt
+.jvmconfig
 /docs/
 /.claude/
 /CLAUDE.md

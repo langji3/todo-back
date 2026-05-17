@@ -1,4 +1,5 @@
 server:
+  port: ${SERVER_PORT:8088}
   tomcat:
     threads:
       max: 300
@@ -30,10 +31,29 @@ spring:
           max-idle: 20
           min-idle: 10
           max-wait: 3000ms
+  mail:
+    host: smtp.qq.com
+    port: 465
+    protocol: smtps
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          ssl:
+            enable: true
   servlet:
     multipart:
       max-file-size: 2MB
       max-request-size: 5MB
+
+aliyun:
+  oss:
+    endpoint: oss-cn-beijing.aliyuncs.com
+    access-key-id: ${ALIYUN_OSS_ACCESS_KEY_ID:}
+    access-key-secret: ${ALIYUN_OSS_ACCESS_KEY_SECRET:}
+    bucket-name: ${ALIYUN_OSS_BUCKET_NAME:}
+    dir: avatar/
 
 mybatis-plus:
   configuration:
