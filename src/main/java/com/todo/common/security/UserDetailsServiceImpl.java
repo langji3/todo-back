@@ -1,7 +1,7 @@
 package com.todo.common.security;
 
 import com.todo.entity.user.User;
-import com.todo.mapper.user.UserMapper;
+import com.todo.service.user.UserCacheService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,11 +15,11 @@ import java.util.Collections;
 @RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
 
-    private final UserMapper userMapper;
+    private final UserCacheService userCacheService;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userMapper.selectByEmail(email);
+        User user = userCacheService.getByEmail(email);
         if (user == null) {
             throw new UsernameNotFoundException("用户不存在: " + email);
         }

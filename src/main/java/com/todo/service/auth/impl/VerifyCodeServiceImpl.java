@@ -8,12 +8,15 @@ import com.todo.service.auth.EmailService;
 import com.todo.service.auth.VerifyCodeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -23,27 +26,66 @@ public class VerifyCodeServiceImpl implements VerifyCodeService {
 
     private final RedisService redisService;
     private final EmailService emailService;
+    private final StringRedisTemplate redisTemplate;
 
     private final SecureRandom random = new SecureRandom();
 
     @Override
     public void sendCode(String email, String ip) {
-        checkInterval(email);
-        checkDailyLimit(RedisConstant.VERIFY_DAILY_PREFIX + email,
-                RedisConstant.VERIFY_DAILY_EMAIL_LIMIT, "该邮箱今日发送次数已达上限");
-        checkDailyLimit(RedisConstant.VERIFY_DAILY_IP_PREFIX + ip,
-                RedisConstant.VERIFY_DAILY_IP_LIMIT, "该IP今日发送次数已达上限");
+        String intervalKey = RedisConstant.VERIFY_INTERVAL_PREFIX + email;
+        String dailyEmailKey = RedisConstant.VERIFY_DAILY_PREFIX + email;
+        String dailyIpKey = RedisConstant.VERIFY_DAILY_IP_PREFIX + ip;
 
+        // Pipeline 读取：间隔检查 + 每日限制
+        List<Object> reads = redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
+            connection.keyCommands().exists(intervalKey.getBytes());
+            connection.stringCommands().get(dailyEmailKey.getBytes());
+            connection.stringCommands().get(dailyIpKey.getBytes());
+            return null;
+        });
+
+        Boolean intervalExists = (Boolean) reads.get(0);
+        if (Boolean.TRUE.equals(intervalExists)) {
+            throw new BusinessException(ResponseCode.BAD_REQUEST, "发送过于频繁，请稍后再试");
+        }
+
+        int emailCount = reads.get(1) != null ? Integer.parseInt((String) reads.get(1)) : 0;
+        if (emailCount >= RedisConstant.VERIFY_DAILY_EMAIL_LIMIT) {
+            throw new BusinessException(ResponseCode.BAD_REQUEST, "该邮箱今日发送次数已达上限");
+        }
+
+        int ipCount = reads.get(2) != null ? Integer.parseInt((String) reads.get(2)) : 0;
+        if (ipCount >= RedisConstant.VERIFY_DAILY_IP_LIMIT) {
+            throw new BusinessException(ResponseCode.BAD_REQUEST, "该IP今日发送次数已达上限");
+        }
+
+        // Pipeline 写入：验证码 + 间隔 + 计数器
         String code = generateCode();
-        redisService.set(RedisConstant.VERIFY_CODE_PREFIX + email, code,
-                RedisConstant.VERIFY_CODE_EXPIRATION, TimeUnit.SECONDS);
-
-        redisService.set(RedisConstant.VERIFY_INTERVAL_PREFIX + email, "1",
-                RedisConstant.VERIFY_INTERVAL_EXPIRATION, TimeUnit.SECONDS);
-
         long ttlSeconds = remainingSecondsToday();
-        incrementCounter(RedisConstant.VERIFY_DAILY_PREFIX + email, ttlSeconds);
-        incrementCounter(RedisConstant.VERIFY_DAILY_IP_PREFIX + ip, ttlSeconds);
+
+        redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
+            connection.stringCommands().set(
+                    (RedisConstant.VERIFY_CODE_PREFIX + email).getBytes(),
+                    code.getBytes());
+            connection.keyCommands().expire(
+                    (RedisConstant.VERIFY_CODE_PREFIX + email).getBytes(),
+                    RedisConstant.VERIFY_CODE_EXPIRATION);
+            connection.stringCommands().set(
+                    intervalKey.getBytes(), "1".getBytes());
+            connection.keyCommands().expire(
+                    intervalKey.getBytes(), RedisConstant.VERIFY_INTERVAL_EXPIRATION);
+            connection.stringCommands().incr(dailyEmailKey.getBytes());
+            connection.stringCommands().incr(dailyIpKey.getBytes());
+            return null;
+        });
+
+        // 首次计数的 key 需要设置过期时间
+        if (emailCount == 0) {
+            redisService.expire(dailyEmailKey, ttlSeconds, TimeUnit.SECONDS);
+        }
+        if (ipCount == 0) {
+            redisService.expire(dailyIpKey, ttlSeconds, TimeUnit.SECONDS);
+        }
 
         emailService.sendVerifyCode(email, code);
     }
@@ -74,20 +116,6 @@ public class VerifyCodeServiceImpl implements VerifyCodeService {
 
         redisService.delete(codeKey);
         redisService.delete(failKey);
-    }
-
-    private void checkInterval(String email) {
-        if (Boolean.TRUE.equals(redisService.hasKey(RedisConstant.VERIFY_INTERVAL_PREFIX + email))) {
-            throw new BusinessException(ResponseCode.BAD_REQUEST, "发送过于频繁，请稍后再试");
-        }
-    }
-
-    private void checkDailyLimit(String key, int limit, String message) {
-        String countStr = redisService.get(key);
-        int count = countStr != null ? Integer.parseInt(countStr) : 0;
-        if (count >= limit) {
-            throw new BusinessException(ResponseCode.BAD_REQUEST, message);
-        }
     }
 
     private String generateCode() {

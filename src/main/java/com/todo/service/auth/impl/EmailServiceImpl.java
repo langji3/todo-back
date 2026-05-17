@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -20,6 +21,7 @@ public class EmailServiceImpl implements EmailService {
     @Value("${spring.mail.username}")
     private String fromEmail;
 
+    @Async
     @Override
     public void sendVerifyCode(String toEmail, String code) {
         try {
@@ -31,9 +33,8 @@ public class EmailServiceImpl implements EmailService {
             helper.setText(buildHtml(code), true);
             mailSender.send(message);
             log.info("验证码邮件已发送至 {}", toEmail);
-        } catch (MessagingException e) {
-            log.error("发送验证码邮件失败: {}", e.getMessage(), e);
-            throw new RuntimeException("邮件发送失败", e);
+        } catch (Exception e) {
+            log.error("发送验证码邮件失败: toEmail={}, error={}", toEmail, e.getMessage(), e);
         }
     }
 

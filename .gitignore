@@ -26,3 +26,5 @@ application-local.properties
 /docs/
 /.claude/
 /CLAUDE.md
+/Dockerfile
+docker-compose.yml

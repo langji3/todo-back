@@ -9,8 +9,8 @@ import com.todo.dto.todo.TodoRequest;
 import com.todo.entity.todo.Todo;
 import com.todo.entity.user.User;
 import com.todo.mapper.todo.TodoMapper;
-import com.todo.mapper.user.UserMapper;
 import com.todo.service.todo.TodoService;
+import com.todo.service.user.UserCacheService;
 import com.todo.vo.todo.TodoVO;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -25,7 +25,7 @@ import java.util.List;
 public class TodoServiceImpl implements TodoService {
 
     private final TodoMapper todoMapper;
-    private final UserMapper userMapper;
+    private final UserCacheService userCacheService;
     private final ModelMapper modelMapper;
 
     @Override
@@ -116,7 +116,7 @@ public class TodoServiceImpl implements TodoService {
     }
 
     private User getUserByEmail(String email) {
-        User user = userMapper.selectByEmail(email);
+        User user = userCacheService.getByEmail(email);
         if (user == null) {
             throw new BusinessException(ResponseCode.UNAUTHORIZED, "用户不存在");
         }

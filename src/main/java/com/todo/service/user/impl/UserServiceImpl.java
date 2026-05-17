@@ -12,6 +12,7 @@ import com.todo.dto.user.UserUpdateRequest;
 import com.todo.entity.user.User;
 import com.todo.mapper.user.UserMapper;
 import com.todo.service.auth.VerifyCodeService;
+import com.todo.service.user.UserCacheService;
 import com.todo.service.user.UserService;
 import com.todo.vo.auth.AuthVO;
 import com.todo.vo.user.UserVO;
@@ -27,6 +28,7 @@ import org.springframework.util.StringUtils;
 public class UserServiceImpl implements UserService {
 
     private final UserMapper userMapper;
+    private final UserCacheService userCacheService;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisTokenService redisTokenService;
@@ -79,7 +81,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserVO getCurrentUser(String email) {
-        User user = userMapper.selectByEmail(email);
+        User user = userCacheService.getByEmail(email);
         if (user == null) {
             throw new BusinessException(ResponseCode.UNAUTHORIZED, "用户不存在");
         }
@@ -112,9 +114,15 @@ public class UserServiceImpl implements UserService {
             if (count > 0) {
                 throw new BusinessException(ResponseCode.BAD_REQUEST, "邮箱已被使用");
             }
+            String oldEmail = user.getEmail();
             user.setEmail(request.getEmail());
+            userMapper.updateById(user);
+            userCacheService.evict(oldEmail);
+            userCacheService.evict(request.getEmail());
+        } else {
+            userMapper.updateById(user);
+            userCacheService.evict(email);
         }
-        userMapper.updateById(user);
         return toVO(user);
     }
 
@@ -127,6 +135,7 @@ public class UserServiceImpl implements UserService {
         }
         user.setAvatar(avatarUrl);
         userMapper.updateById(user);
+        userCacheService.evict(email);
         return avatarUrl;
     }
 

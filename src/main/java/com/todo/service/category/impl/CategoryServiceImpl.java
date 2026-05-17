@@ -10,8 +10,8 @@ import com.todo.entity.todo.Todo;
 import com.todo.entity.user.User;
 import com.todo.mapper.category.CategoryMapper;
 import com.todo.mapper.todo.TodoMapper;
-import com.todo.mapper.user.UserMapper;
 import com.todo.service.category.CategoryService;
+import com.todo.service.user.UserCacheService;
 import com.todo.vo.category.CategoryVO;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryMapper categoryMapper;
-    private final UserMapper userMapper;
+    private final UserCacheService userCacheService;
     private final TodoMapper todoMapper;
     private final ModelMapper modelMapper;
 
@@ -88,7 +88,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     private User getUserByEmail(String email) {
-        User user = userMapper.selectByEmail(email);
+        User user = userCacheService.getByEmail(email);
         if (user == null) {
             throw new BusinessException(ResponseCode.UNAUTHORIZED, "用户不存在");
         }

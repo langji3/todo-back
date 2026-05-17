@@ -7,8 +7,8 @@ import com.todo.dto.user.SettingsRequest;
 import com.todo.entity.settings.UserSettings;
 import com.todo.entity.user.User;
 import com.todo.mapper.settings.UserSettingsMapper;
-import com.todo.mapper.user.UserMapper;
 import com.todo.service.settings.UserSettingsService;
+import com.todo.service.user.UserCacheService;
 import com.todo.vo.user.SettingsVO;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -20,12 +20,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserSettingsServiceImpl implements UserSettingsService {
 
     private final UserSettingsMapper userSettingsMapper;
-    private final UserMapper userMapper;
+    private final UserCacheService userCacheService;
     private final ModelMapper modelMapper;
 
     @Override
     public SettingsVO getSettings(String email) {
-        User user = userMapper.selectByEmail(email);
+        User user = userCacheService.getByEmail(email);
         if (user == null) {
             throw new BusinessException(ResponseCode.NOT_FOUND, "用户不存在");
         }
@@ -42,7 +42,7 @@ public class UserSettingsServiceImpl implements UserSettingsService {
     @Override
     @Transactional
     public SettingsVO updateSettings(String email, SettingsRequest request) {
-        User user = userMapper.selectByEmail(email);
+        User user = userCacheService.getByEmail(email);
         if (user == null) {
             throw new BusinessException(ResponseCode.NOT_FOUND, "用户不存在");
         }
